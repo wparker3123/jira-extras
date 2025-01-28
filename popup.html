@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jira Extras</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="libraries/nouislider/nouislider.min.css">
+</head>
+<body>
+    <script src="libraries/nouislider/nouislider.min.js"></script>
+    <!-- <header>
+        <h1>Jira Extras</h1>
+    </header> -->
+    <main>
+        <section id="ticket-list">
+            <h2>Active Stories</h2>
+            <div id="active-tickets">
+                <!-- active tickets will be dynamically populated here -->
+            </div>
+            <h2>Current Sprint Stories</h2>
+            <div id="tickets">
+                <!-- Tickets will be dynamically populated here -->
+            </div>
+        </section>
+        <section id="ticket-details" style="display: none;">
+            <h2>Story Details</h2>
+            <form id="ticket-form">
+                <label for="ticket-id">Story ID:</label>
+                <input type="text" id="ticket-id" name="ticket-id" readonly>
+
+                <label for="ticket-summary">Summary:</label>
+                <input type="text" id="ticket-summary" name="ticket-summary" readonly>
+
+                <label for="ticket-status-slider">Story Status (<span id="ticket-status-label">To Do</span>):</label>
+                <div id="ticket-status-slider"></div>
+                <br><br>
+                <!-- <select id="ticket-status" name="ticket-status">
+                    <option value="To Do">To Do</option>
+                    <option value="Backlog">Backlog</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Ready for QA">Ready for QA</option>
+                    <option value="Testing">Testing</option>
+                    <option value="Accepted">Accepted</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Blocked">Blocked</option>
+                </select> -->
+
+                <label for="ticket-assignee">Assignee:</label>
+                <input type="text" id="ticket-assignee" name="ticket-assignee">
+
+                <button type="button" id="update-status">Update Status</button>
+                <button type="button" id="close-details">Close</button>
+            </form>
+        </section>
+    </main>
+    <!-- <footer>
+        <p>&copy; 2023 Jira Extras</p>
+    </footer> -->
+    <script src="javascript/popup.js" defer></script>
+</body>
+</html>

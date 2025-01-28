@@ -1,0 +1,91 @@
+/* Basic styling for the popup */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+    width: 700px;
+}
+
+header, footer {
+    text-align: center;
+    background-color: #333;
+    color: white;
+    padding: 10px 0;
+}
+
+h1, h2 {
+    color: #333;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#ticket-list {
+    max-width: 650px;
+}
+#tickets, #active-tickets {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: .25rem;
+    width: 80%;
+    padding: .5rem;
+    box-sizing: border-box;
+}
+.ticket {
+    background-color: white;
+    padding: .5rem 1rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    width: 10rem;
+    height: 3rem;
+}
+
+.ticket:hover {
+    background-color: #f0f0f0;
+}
+
+.ticket-container {
+    padding: 1rem 0;
+}
+
+#ticket-details {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+label {
+    font-weight: bold;
+}
+
+input, select, button {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+a { 
+    color: blue;
+}
