@@ -1,4 +1,4 @@
-getActiveJiraStories = async () => {
+const getActiveJiraStories = async () => {
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     myHeaders.append("Authorization", "YOUR_TOKEN_HERE");
@@ -42,34 +42,8 @@ getActiveJiraStories = async () => {
     });
 }
 
-populateTickets = (tickets) => {
-    const ticketList = document.getElementById('tickets');
-    const activeTickets = document.getElementById('active-tickets');
-    const ticketDetailsSection = document.getElementById('ticket-details');
-    const ticketForm = document.getElementById('ticket-form');
-    const ticketIdInput = document.getElementById('ticket-id');
-    const ticketSummaryInput = document.getElementById('ticket-summary');
-    const ticketStatusSlider = document.getElementById('ticket-status-slider');
-    const ticketStatusLabel = document.getElementById('ticket-status-label');
-    const ticketAssigneeInput = document.getElementById('ticket-assignee');
-
-    // const statusOptions = [
-    //     "To Do",
-    //     "Backlog",
-    //     "In Progress",
-    //     "Ready for QA",
-    //     "Testing",
-    //     "Accepted",
-    //     "Completed",
-    //     "Blocked"
-    // ];
-
-    // const statusOptions = transitions.map(transition => transition.name);
-
-    const defaultStatusOptions = ["Loading..."];
-    const statusOptions = [];
-
-    noUiSlider.create(ticketStatusSlider, {
+const createSlider = (sliderContainer, defaultStatusOptions) => {
+    noUiSlider.create(sliderContainer, {
         start: 0,
         step: 1,
         range: {
@@ -95,31 +69,35 @@ populateTickets = (tickets) => {
             }
         }
     });
+};
 
-    ticketStatusSlider.noUiSlider.on('update', (values, handle) => {
+const addSliderEvents = (sliderContainer, statusOptions, tickets, ticketId) => {
+    const ticketStatusLabel = document.getElementById('ticket-status-label');
+
+    sliderContainer.noUiSlider.on('update', (values, handle) => {
         const value = values[handle];
         ticketStatusLabel.textContent = statusOptions[value];
     });
 
-    ticketStatusSlider.noUiSlider.on('change', (values, handle) => {
+    sliderContainer.noUiSlider.on('change', (values, handle) => {
         console.log('Slider updated');
         const value = values[handle];
 
-        getJiraTransitions(ticketIdInput.value)
+        getJiraTransitions(ticketId.value)
             .then((currentStatuses) => {
                 if (!currentStatuses.length) { throw new Error("No transitions found for Jira ticket"); }
                 console.log('Transitions: ', currentStatuses);
                 return currentStatuses.find(transition => transition.name === statusOptions[value])?.id;
             })
             .then((statusId) => {
-                updateJiraStatus(ticketIdInput.value, statusId)
+                updateJiraStatus(ticketId.value, statusId)
                     .then((response) => {
                         if (!response.ok) {
                             throw new Error("Error updating Jira status: ", response);
                         }
                         console.log(`Jira status updated to ${statusOptions[value]}`);
                         //update in tickets array too
-                        const ticket = tickets.find(t => t.id === ticketIdInput.value);
+                        const ticket = tickets.find(t => t.id === ticketId.value);
                         if (ticket) {
                             ticket.status = statusOptions[value];
                         }
@@ -132,6 +110,35 @@ populateTickets = (tickets) => {
                 console.error("Error fetching Jira transitions: ", error);
             });
     });
+};
+
+
+const populateTickets = (tickets) => {
+    const ticketList = document.getElementById('tickets');
+    const activeTickets = document.getElementById('active-tickets');
+    const ticketDetailsSection = document.getElementById('ticket-details');
+    const ticketForm = document.getElementById('ticket-form');
+    const ticketIdInput = document.getElementById('ticket-id');
+    const ticketSummaryInput = document.getElementById('ticket-summary');
+    const ticketStatusSlider = document.getElementById('ticket-status-slider');
+    const ticketAssigneeInput = document.getElementById('ticket-assignee');
+
+    // const statusOptions = [
+    //     "To Do",
+    //     "Backlog",
+    //     "In Progress",
+    //     "Ready for QA",
+    //     "Testing",
+    //     "Accepted",
+    //     "Completed",
+    //     "Blocked"
+    // ];
+
+    const defaultStatusOptions = ["Loading..."];
+    const statusOptions = [];
+
+    createSlider(ticketStatusSlider, defaultStatusOptions);
+    addSliderEvents(ticketStatusSlider, statusOptions, tickets, ticketIdInput);
 
     // Populate ticket list
     tickets.forEach(ticket => {
@@ -151,7 +158,10 @@ populateTickets = (tickets) => {
             ticketIdInput.value = ticket.id;
             ticketSummaryInput.value = ticket.summary;
             ticketStatusSlider.noUiSlider.set(statusOptions.indexOf(ticket.status));
-            ticketAssigneeInput.value = ticket.assignee;
+            console.log('Assignee: ', ticket.assignee);
+            populateAssignees(ticket.assignee);
+            // ticketAssigneeInput.value = ticket.assignee;
+            // ticketAssigneeInput.innerHTML = ticket.assignee;
             ticketDetailsSection.style.display = 'block';
             // ticketDetailsSection.scrollIntoView({ behavior: 'smooth' });
 
@@ -207,7 +217,7 @@ populateTickets = (tickets) => {
     });
 };
 
-getJiraTransitions = async (ticketId) => {
+const getJiraTransitions = async (ticketId) => {
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     myHeaders.append("Authorization", "YOUR_TOKEN_HERE");
@@ -256,7 +266,7 @@ getJiraTransitions = async (ticketId) => {
     });
 }
 
-updateJiraStatus = async (ticketId, statusId) => {
+const updateJiraStatus = async (ticketId, statusId) => {
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     myHeaders.append("Authorization", "YOUR_TOKEN_HERE");
@@ -294,9 +304,72 @@ updateJiraStatus = async (ticketId, statusId) => {
         }
     });
 }
+
+const getAssigneesFromBoard = async (boardId) => {
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    myHeaders.append("Authorization", "YOUR_TOKEN_HERE");
+
+    const requestOptions = {
+        method: "GET",
+        headers: myHeaders,
+        redirect: "follow"
+    };
+
+    return new Promise((resolve, reject) => {
+        try {
+            fetch(`https://YOUR_JIRA_DOMAIN/rest/agile/1.0/board/${boardId}/issue`, requestOptions)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Get Board Issues response was not ok");
+                    }
+                    return response.json();
+                })
+                .then((respBody) => {
+                    const issues = respBody.issues;
+                    const assignees =
+                        [...new Set(issues.map(issue => {
+                            return JSON.stringify({
+                                name: issue.fields?.assignee?.displayName,
+                                userName: issue.fields?.assignee?.name
+                            });
+                        }).filter(Boolean))];
+                    resolve(assignees);
+                })
+                .catch((error) => {
+                    console.error(error);
+                    reject(error);
+                });
+        } catch (error) {
+            console.error("Error fetching board issues: ", error);
+            reject(error);
+        }
+    });
+};
+
+const populateAssignees = async (currentAssignee) => {
+    const assigneeSelect = document.getElementById('ticket-assignee');
+    await getAssigneesFromBoard(YOUR_BOARD_ID).then(rawAssignees => rawAssignees.map(JSON.parse))
+        .then(assignees => {
+            assignees.forEach(assignee => {
+                if (assignee.name.includes("[X]")) { return; }
+                const option = document.createElement('option');
+                option.value = assignee.userName;
+                option.innerHTML = assignee.name;
+                assigneeSelect.appendChild(option);
+
+                assigneeSelect.value = "";
+                assigneeSelect.value = currentAssignee;
+            });
+        }).catch((error) => {
+            console.error("Error fetching assignees: ", error);
+        });
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // Set loading
+    // Set loading, replace this with spinner
     document.getElementById('tickets').innerHTML = "Loading...";
+
     await getActiveJiraStories().then((tickets) => {
         document.getElementById('tickets').innerHTML = "";
         if (!tickets?.length) {
@@ -304,10 +377,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         populateTickets(tickets);
-    })
-        .catch((error) => {
-            console.error("Error fetching active Jira stories: ", error);
-        });
+    }).catch((error) => {
+        console.error("Error fetching active Jira stories: ", error);
+    });
 
     console.log('DOM fully loaded and parsed');
 });

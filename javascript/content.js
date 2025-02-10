@@ -1,4 +1,4 @@
-injectScript = (file) => {
+const injectScript = (file) => {
     const script = document.createElement("script");
     try {
         script.src = chrome.runtime.getURL(file);
@@ -9,7 +9,7 @@ injectScript = (file) => {
     }
 };
 
-checkForJiraStory = (highlightedText) => {
+const checkForJiraStory = (highlightedText) => {
     //expected format is like YOUR_PROJECT_KEY-3752 or YOUR_PROJECT_KEY-3784
     const jiraRegex = /YOUR_PROJECT_KEY-\d{4}/g; // can add more teams later
     const jiraMatches = highlightedText.replace(/\s/g, "").match(jiraRegex);
