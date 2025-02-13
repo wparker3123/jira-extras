@@ -27,7 +27,7 @@ main {
 #ticket-list {
     max-width: 650px;
 }
-#tickets, #active-tickets {
+.ticket-view {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: .25rem;

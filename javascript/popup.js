@@ -116,6 +116,7 @@ const addSliderEvents = (sliderContainer, statusOptions, tickets, ticketId) => {
 const populateTickets = (tickets) => {
     const ticketList = document.getElementById('tickets');
     const activeTickets = document.getElementById('active-tickets');
+    const completedTickets = document.getElementById('completed-tickets');
     const ticketDetailsSection = document.getElementById('ticket-details');
     const ticketForm = document.getElementById('ticket-form');
     const ticketIdInput = document.getElementById('ticket-id');
@@ -194,7 +195,11 @@ const populateTickets = (tickets) => {
         containerDiv.appendChild(div);
         if (ticket.status === 'In Progress' || ticket.status === 'Testing') {
             activeTickets.appendChild(containerDiv);
-        } else {
+        }
+        else if (ticket.status === 'Ready for QA') {
+            completedTickets.appendChild(containerDiv);
+        }
+        else {
             ticketList.appendChild(containerDiv);
         }
     });
