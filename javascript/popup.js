@@ -1,7 +1,42 @@
-const getActiveJiraStories = async () => {
+let isOffline = false;
+
+const getHeaders = () => {
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
     myHeaders.append("Authorization", "YOUR_TOKEN_HERE");
+
+    return myHeaders;
+}
+
+const getJiraStoryCache = () => {
+    const storyCache = localStorage.getItem('jiraStoryCache');
+
+    return storyCache ? JSON.parse(storyCache) : [];
+
+};
+
+const updateJiraStoryCache = (stories) => {
+    localStorage.setItem('jiraStoryCache', JSON.stringify({ stories: stories, timestamp: new Date().getTime() }));
+};
+
+const populatedFromCache = () => {
+    const storyCache = getJiraStoryCache();
+    if (!storyCache?.timestamp) { return false; }
+
+    const cacheTimestamp = new Date(storyCache.timestamp);
+    const currentTimestamp = new Date();
+    const diff = currentTimestamp - cacheTimestamp;
+    const diffSeconds = diff / 1000;
+
+    if (diffSeconds > 120) { return false; }
+    if (!storyCache.stories?.length) { return false; }
+
+    populateTickets(storyCache.stories);
+    return true;
+};
+
+const getActiveJiraStories = async () => {
+    const myHeaders = getHeaders();
 
     const requestOptions = {
         method: "GET",
@@ -24,14 +59,14 @@ const getActiveJiraStories = async () => {
                             id: jiraStory.key,
                             summary: jiraStory.fields?.summary,
                             assignee: jiraStory.fields?.assignee?.displayName,
-                            status: jiraStory.fields?.status?.name
+                            status: jiraStory.fields?.status?.name,
+                            description: jiraStory.fields?.description
                         }
                     });
-                    console.log(newArray);
                     resolve(newArray);
                 })
                 .catch((error) => {
-                    console.error(error);
+                    console.error("Error fetching active Jira stories: ", error);
                     reject(error);
                 });
         }
@@ -112,6 +147,31 @@ const addSliderEvents = (sliderContainer, statusOptions, tickets, ticketId) => {
     });
 };
 
+const formatJiraDescription = (text) => {
+    if (!text) return '';
+    text = String(text);
+
+    // Headers
+    text = text.replace(/^h1\.\s*(.*?)$/gm, '<h1>$1</h1>');
+    text = text.replace(/^h2\.\s*(.*?)$/gm, '<h2>$1</h2>');
+    text = text.replace(/^h3\.\s*(.*?)$/gm, '<h3>$1</h3>');
+
+    // Lists
+    text = text.replace(/^[-*]\s*(.*?)$/gm, '<li>$1</li>');
+    text = text.replace(/^#\s*(.*?)$/gm, '<li>$1</li>');
+
+    // Text styling
+    text = text.replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>');
+    text = text.replace(/_([^_\n]+)_/g, '<em>$1</em>');
+
+    // Links
+    text = text.replace(/\[([^|]+)\|([^\]]+)\]/g, '<a href="$2" target="_blank">$1</a>');
+
+    // Line breaks
+    // text = text.replace(/\n/g, '<br>');
+
+    return text;
+};
 
 const populateTickets = (tickets) => {
     const ticketList = document.getElementById('tickets');
@@ -123,17 +183,8 @@ const populateTickets = (tickets) => {
     const ticketSummaryInput = document.getElementById('ticket-summary');
     const ticketStatusSlider = document.getElementById('ticket-status-slider');
     const ticketAssigneeInput = document.getElementById('ticket-assignee');
-
-    // const statusOptions = [
-    //     "To Do",
-    //     "Backlog",
-    //     "In Progress",
-    //     "Ready for QA",
-    //     "Testing",
-    //     "Accepted",
-    //     "Completed",
-    //     "Blocked"
-    // ];
+    const ticketDescription = document.getElementById('ticket-description');
+    const ticketNotes = document.getElementById('ticket-notes');
 
     const defaultStatusOptions = ["Loading..."];
     const statusOptions = [];
@@ -143,6 +194,7 @@ const populateTickets = (tickets) => {
 
     // Populate ticket list
     tickets.forEach(ticket => {
+        debugger;
         const containerDiv = document.createElement('div');
         containerDiv.className = 'ticket-container';
 
@@ -153,18 +205,25 @@ const populateTickets = (tickets) => {
         ticketLink.innerHTML = `<strong>${ticket.id}</strong>`;
         div.appendChild(ticketLink);
         div.className = 'ticket';
-        div.innerHTML += `<br>${ticket.summary}`;
+        div.innerHTML += `<br><p>${ticket.summary}</p>`;
         div.dataset.id = ticket.id;
         div.addEventListener('click', () => {
             ticketIdInput.value = ticket.id;
             ticketSummaryInput.value = ticket.summary;
             ticketStatusSlider.noUiSlider.set(statusOptions.indexOf(ticket.status));
+            ticketDescription.innerHTML = formatJiraDescription(ticket.description);
             console.log('Assignee: ', ticket.assignee);
             populateAssignees(ticket.assignee);
-            // ticketAssigneeInput.value = ticket.assignee;
-            // ticketAssigneeInput.innerHTML = ticket.assignee;
-            ticketDetailsSection.style.display = 'block';
-            // ticketDetailsSection.scrollIntoView({ behavior: 'smooth' });
+            showForm();
+            //ticketDetailsSection.style.display = 'block';
+            //ticketDetailsSection.scrollIntoView({ behavior: 'smooth' });
+            handleUserNotes(ticketNotes, ticket.id);
+
+            if (isOffline) {
+                ticketStatusSlider.style.display = 'none';
+                ticketAssigneeInput.style.display = 'none';
+                document.getElementById('update-assignee').style.display = 'none';
+            }
 
             getJiraTransitions(ticket.id).then(transitions => {
                 const newStatusOptions = transitions.map(transition => transition.name);
@@ -189,14 +248,13 @@ const populateTickets = (tickets) => {
                     }
                 });
                 ticketStatusSlider.noUiSlider.set(statusOptions.indexOf(ticket.status));
-                ticketDetailsSection.scrollIntoView({ behavior: 'smooth' });
             });
         });
         containerDiv.appendChild(div);
         if (ticket.status === 'In Progress' || ticket.status === 'Testing') {
             activeTickets.appendChild(containerDiv);
         }
-        else if (ticket.status === 'Ready for QA') {
+        else if (['Done', 'Ready for QA', 'Accepted'].includes(ticket.status)) {
             completedTickets.appendChild(containerDiv);
         }
         else {
@@ -205,27 +263,39 @@ const populateTickets = (tickets) => {
     });
 
     // Update ticket status and assignee
-    document.getElementById('update-status').addEventListener('click', () => {
+    document.getElementById('update-assignee').addEventListener('click', () => {
         const ticketId = ticketIdInput.value;
-        const newStatus = statusOptions[ticketStatusSlider.noUiSlider.get()];
         const newAssignee = ticketAssigneeInput.value;
         const ticket = tickets.find(t => t.id === ticketId);
         if (ticket) {
-            ticket.status = newStatus;
             ticket.assignee = newAssignee;
-            alert(`Status and assignee of ${ticketId} updated to ${newStatus} and ${newAssignee}`);
+            updateJiraAssignee(ticketId, newAssignee);
+            alert(`Assignee of ${ticketId} updated to ${newAssignee}`);
         }
     });
 
     document.getElementById('close-details').addEventListener('click', () => {
-        ticketDetailsSection.style.display = 'none';
+        hideForm();
     });
 };
 
+const showForm = () => {
+    document.getElementById('ticket-list').style.display = 'none';
+    document.getElementById('ticket-details').style.display = 'block';
+};
+
+const hideForm = () => {
+    document.getElementById('ticket-details').style.display = 'none';
+    document.getElementById('ticket-list').style.display = 'block';
+};
+
 const getJiraTransitions = async (ticketId) => {
-    const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", "YOUR_TOKEN_HERE");
+    if (isOffline) {
+        console.log('Offline mode - skipping transition fetch');
+        return [];
+    }
+
+    const myHeaders = getHeaders();
 
     const requestOptions = {
         method: "GET",
@@ -272,9 +342,12 @@ const getJiraTransitions = async (ticketId) => {
 }
 
 const updateJiraStatus = async (ticketId, statusId) => {
-    const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", "YOUR_TOKEN_HERE");
+    if (isOffline) {
+        console.log('Offline mode - skipping transition fetch');
+        return Promise.reject(new Error('Cannot update status while offline'));
+    }
+
+    const myHeaders = getHeaders();
 
     const raw = JSON.stringify({
         "transition": {
@@ -296,6 +369,7 @@ const updateJiraStatus = async (ticketId, statusId) => {
                     if (!response.ok) {
                         throw new Error("Update Jira Status response was not ok");
                     }
+                    localStorage.removeItem('jiraStoryCache');
                     resolve(response);
                 })
                 .catch((error) => {
@@ -311,9 +385,12 @@ const updateJiraStatus = async (ticketId, statusId) => {
 }
 
 const getAssigneesFromBoard = async (boardId) => {
-    const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", "YOUR_TOKEN_HERE");
+    if (isOffline) {
+        console.log('Offline mode - skipping assignee fetch');
+        return [];
+    }
+
+    const myHeaders = getHeaders();
 
     const requestOptions = {
         method: "GET",
@@ -354,7 +431,12 @@ const getAssigneesFromBoard = async (boardId) => {
 
 const populateAssignees = async (currentAssignee) => {
     const assigneeSelect = document.getElementById('ticket-assignee');
-    await getAssigneesFromBoard(YOUR_BOARD_ID).then(rawAssignees => rawAssignees.map(JSON.parse))
+    assigneeSelect.options.length = 0;
+    await getAssigneesFromBoard(YOUR_BOARD_ID)
+        .then(rawAssignees => {
+            const assignees = rawAssignees.map(JSON.parse);
+            return [...new Set(assignees)];
+        })
         .then(assignees => {
             assignees.forEach(assignee => {
                 if (assignee.name.includes("[X]")) { return; }
@@ -371,20 +453,104 @@ const populateAssignees = async (currentAssignee) => {
         });
 };
 
-document.addEventListener('DOMContentLoaded', async () => {
-    // Set loading, replace this with spinner
-    document.getElementById('tickets').innerHTML = "Loading...";
+const updateJiraAssignee = async (ticketId, assigneeUserName) => {
+    if (isOffline) {
+        console.log('Offline mode - skipping assignee update');
+        return Promise.reject(new Error('Cannot update assignee while offline'));
+    }
 
+    const myHeaders = getHeaders();
+
+    const raw = JSON.stringify({ "name": assigneeUserName });
+
+    const requestOptions = {
+        method: "PUT",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow"
+    };
+
+    return new Promise((resolve, reject) => {
+        try {
+            fetch(`https://YOUR_JIRA_DOMAIN/rest/api/2/issue/${ticketId}/assignee`, requestOptions)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Update Jira Assignee response was not ok");
+                    }
+                    localStorage.removeItem('jiraStoryCache');
+                    resolve(response);
+                })
+                .catch((error) => {
+                    console.error(error);
+                    reject(error);
+                });
+        }
+        catch (error) {
+            console.error("Error updating Jira assignee: ", error);
+            reject(error);
+        }
+    });
+};
+
+const handleUserNotes = (noteElement, storyId) => {
+    noteElement.removeEventListener('keyup', noteElement.saveNote);
+    const saveStatus = document.getElementById('save-status');
+    noteElement.value = localStorage.getItem(`notes-${storyId}`) || '';
+
+    document.getElementById('note-container').open = !!noteElement.value;
+
+    let noteTakingTimeout;
+    noteElement.saveNote = ('keyup', () => {
+        clearTimeout(noteTakingTimeout);
+        console.log('Note taking timeout cleared');
+        noteTakingTimeout = setTimeout(() => {
+            localStorage.setItem(`notes-${storyId}`, noteElement.value);
+            saveStatus.innerHTML = "Note saved!";
+            setTimeout(() => {
+                saveStatus.innerHTML = "";
+            }, 1500);
+        }, 1500);
+    });
+
+    noteElement.addEventListener('keyup', noteElement.saveNote);
+
+};
+
+const prepareMainSection = async () => {
+    if (populatedFromCache()) { return; }
+
+    document.getElementById('tickets').innerHTML = "<h1>Loading...</h1>";
     await getActiveJiraStories().then((tickets) => {
         document.getElementById('tickets').innerHTML = "";
         if (!tickets?.length) {
             console.log('No active Jira stories found or error fetching active Jira stories');
             return;
         }
+        updateJiraStoryCache(tickets);
         populateTickets(tickets);
     }).catch((error) => {
-        console.error("Error fetching active Jira stories: ", error);
+        console.log("Error fetching active Jira stories: ", error);
+        isOffline = true;
+        document.getElementById('tickets').innerHTML = "<h1>Loading from cache...</h1>";
+        const cachedTickets = getJiraStoryCache();
+        if (!cachedTickets.stories?.length) {
+            console.error('No cached Jira stories found');
+            document.getElementById('tickets').innerHTML = "<h1>Offline mode - No cached Jira stories found</h1>";
+            return;
+        }
+        setTimeout(() => {
+            document.getElementById('tickets').innerHTML = "";
+            populateTickets(cachedTickets.stories);
+        }, 1000);
     });
+};
 
-    console.log('DOM fully loaded and parsed');
+const reloadContent = () => {
+    document.getElementById('tickets').innerHTML = "<h1>Reloading...</h1>";
+
+    setTimeout(prepareMainSection(), 2000);
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    prepareMainSection();
 });

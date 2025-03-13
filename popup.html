@@ -14,16 +14,16 @@
     </header> -->
     <main>
         <section id="ticket-list">
-            <h2>Active Stories</h2>
+            <h2 class="story-categories">Active Stories</h2>
             <div id="active-tickets" class="ticket-view">
                 <!-- active tickets will be dynamically populated here -->
             </div>
-            <h2>Current Sprint Stories</h2>
+            <h2 class="story-categories">Current Sprint Stories</h2>
             <div id="tickets" class="ticket-view">
                 <!-- Tickets will be dynamically populated here -->
             </div>
             <!--make next section collapsed by default, only show heading-->
-            <h2>Completed Stories</h2><i class="fa fa-chevron-down"></i>
+            <h2 class="story-categories">Completed Stories</h2><i class="fa fa-chevron-down"></i>
             <div id="completed-tickets" class="ticket-view">
                 <!-- completed tickets will be dynamically populated here -->
             </div>
@@ -36,32 +36,30 @@
 
                 <label for="ticket-summary">Summary:</label>
                 <input type="text" id="ticket-summary" name="ticket-summary" readonly>
+                
+                <details class="description-container">
+                    <summary>Description</summary>
+                    <div id="ticket-description" name="ticket-description" class="description-content" readonly></div>
+                </details>
+
+                <details id="note-container" class="description-container">
+                    <summary>Notes</summary>
+                    <textarea id="ticket-notes" class="description-content"></textarea>
+                    <p id="save-status" class="save-status" ></p>
+                </details>
 
                 <label for="ticket-status-slider">Story Status (<span id="ticket-status-label">To Do</span>):</label>
                 <div id="ticket-status-slider"></div>
                 <br><br>
-                <!-- <select id="ticket-status" name="ticket-status">
-                    <option value="To Do">To Do</option>
-                    <option value="Backlog">Backlog</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Ready for QA">Ready for QA</option>
-                    <option value="Testing">Testing</option>
-                    <option value="Accepted">Accepted</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Blocked">Blocked</option>
-                </select> -->
 
                 <label for="ticket-assignee">Assignee:</label>
                 <select id="ticket-assignee" name="ticket-assignee"></select>
                     <!-- Assignees will be dynamically populated here -->
-                <button type="button" id="update-status">Update Status</button>
+                <button type="button" id="update-assignee">Update Assignee</button>
                 <button type="button" id="close-details">Close</button>
             </form>
         </section>
     </main>
-    <!-- <footer>
-        <p>&copy; 2023 Jira Extras</p>
-    </footer> -->
     <script src="javascript/popup.js" defer></script>
 </body>
 </html>
