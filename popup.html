@@ -9,9 +9,13 @@
 </head>
 <body>
     <script src="libraries/nouislider/nouislider.min.js"></script>
-    <!-- <header>
-        <h1>Jira Extras</h1>
-    </header> -->
+    <div class="settings-bar">
+        <label class="switch" id="description-switch">
+            <input type="checkbox" id="collapseDescription" class="settings-input">
+            <span class="slider-round"></span>
+        </label>
+        <span>Collapse Description</span>
+    </div>
     <main>
         <section id="ticket-list">
             <h2 class="story-categories">Active Stories</h2>
@@ -22,7 +26,6 @@
             <div id="tickets" class="ticket-view">
                 <!-- Tickets will be dynamically populated here -->
             </div>
-            <!--make next section collapsed by default, only show heading-->
             <h2 class="story-categories">Completed Stories</h2><i class="fa fa-chevron-down"></i>
             <div id="completed-tickets" class="ticket-view">
                 <!-- completed tickets will be dynamically populated here -->

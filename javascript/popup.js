@@ -1,4 +1,24 @@
 let isOffline = false;
+const defaultSettings = {
+    collapseDescription: true,
+};
+
+const loadSettings = (callback) => {
+    chrome.storage.sync.get('settings', (result) => {
+        const settings = result?.settings || defaultSettings;
+        callback(settings);
+    });
+};
+
+const saveSetting = (setting, newVal) => {
+    loadSettings(currentSettings => {
+        if (!currentSettings.hasOwnProperty(setting)) { return };
+
+        currentSettings[setting] = newVal;
+        chrome.storage.sync.set({ settings: currentSettings });
+        applySetting(setting, newVal);
+    });
+}
 
 const getHeaders = () => {
     const myHeaders = new Headers();
@@ -194,7 +214,6 @@ const populateTickets = (tickets) => {
 
     // Populate ticket list
     tickets.forEach(ticket => {
-        debugger;
         const containerDiv = document.createElement('div');
         containerDiv.className = 'ticket-container';
 
@@ -282,11 +301,13 @@ const populateTickets = (tickets) => {
 const showForm = () => {
     document.getElementById('ticket-list').style.display = 'none';
     document.getElementById('ticket-details').style.display = 'block';
+    document.querySelector('div.settings-bar').style.display = 'none';
 };
 
 const hideForm = () => {
     document.getElementById('ticket-details').style.display = 'none';
     document.getElementById('ticket-list').style.display = 'block';
+    document.querySelector('div.settings-bar').style.display = 'flex';
 };
 
 const getJiraTransitions = async (ticketId) => {
@@ -545,6 +566,30 @@ const prepareMainSection = async () => {
     });
 };
 
+const prepareSettingsUI = () => {
+    const settingsInputElems = document.getElementsByClassName('settings-input');
+    [...settingsInputElems].forEach((elem) => {
+        loadSettings(settings => {
+            elem.checked = settings[elem.id];
+            applySetting(elem.id, elem.checked);
+        });
+        elem.addEventListener('change', (event) => {
+            saveSetting(event.target.id, event.target.checked);
+        });
+    })
+};
+
+const applySetting = (setting, userChoice) => {
+    switch (setting) {
+        case 'collapseDescription':
+            collapseDescription(userChoice);
+    }
+};
+
+const collapseDescription = (isCollapsed) => {
+    document.querySelector('details.description-container').open = !isCollapsed;
+};
+
 const reloadContent = () => {
     document.getElementById('tickets').innerHTML = "<h1>Reloading...</h1>";
 
@@ -552,5 +597,6 @@ const reloadContent = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    prepareSettingsUI();
     prepareMainSection();
 });
