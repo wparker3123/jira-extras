@@ -1,6 +1,7 @@
 let isOffline = false;
 const defaultSettings = {
     collapseDescription: true,
+    theme: 'auto'
 };
 
 const loadSettings = (callback) => {
@@ -54,7 +55,49 @@ const populatedFromCache = () => {
     populateTickets(storyCache.stories);
     return true;
 };
+const getAvailableSprints = async () => {
+    const myHeaders = getHeaders();
 
+    const requestOptions = {
+        method: "GET",
+        headers: myHeaders,
+        redirect: "follow"
+    };
+
+    return new Promise((resolve, reject) => {
+        try {
+            fetch("https://YOUR_JIRA_DOMAIN/rest/agile/1.0/board/YOUR_BOARD_ID/sprint", requestOptions)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch sprints");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Sort sprints by end date (newest first)
+                    const sprints = data.values.sort((a, b) => {
+                        return new Date(b.endDate || b.completeDate) -
+                            new Date(a.endDate || a.completeDate);
+                    });
+
+                    // Cache sprints for offline use
+                    localStorage.setItem('jiraSprintCache', JSON.stringify({
+                        sprints,
+                        timestamp: new Date().getTime()
+                    }));
+
+                    resolve(sprints);
+                })
+                .catch(error => {
+                    console.error("Error fetching sprints:", error);
+                    reject(error);
+                });
+        } catch (error) {
+            console.error("Error in getAvailableSprints:", error);
+            reject(error);
+        }
+    });
+};
 const getActiveJiraStories = async () => {
     const myHeaders = getHeaders();
 
@@ -187,9 +230,6 @@ const formatJiraDescription = (text) => {
     // Links
     text = text.replace(/\[([^|]+)\|([^\]]+)\]/g, '<a href="$2" target="_blank">$1</a>');
 
-    // Line breaks
-    // text = text.replace(/\n/g, '<br>');
-
     return text;
 };
 
@@ -205,6 +245,7 @@ const populateTickets = (tickets) => {
     const ticketAssigneeInput = document.getElementById('ticket-assignee');
     const ticketDescription = document.getElementById('ticket-description');
     const ticketNotes = document.getElementById('ticket-notes');
+    const ticketJiraLink = document.getElementById('jira-link');
 
     const defaultStatusOptions = ["Loading..."];
     const statusOptions = [];
@@ -228,14 +269,15 @@ const populateTickets = (tickets) => {
         div.dataset.id = ticket.id;
         div.addEventListener('click', () => {
             ticketIdInput.value = ticket.id;
+            ticketJiraLink.href = `https://YOUR_JIRA_DOMAIN/browse/${ticket.id}`;
             ticketSummaryInput.value = ticket.summary;
             ticketStatusSlider.noUiSlider.set(statusOptions.indexOf(ticket.status));
             ticketDescription.innerHTML = formatJiraDescription(ticket.description);
             console.log('Assignee: ', ticket.assignee);
             populateAssignees(ticket.assignee);
-            showForm();
-            //ticketDetailsSection.style.display = 'block';
-            //ticketDetailsSection.scrollIntoView({ behavior: 'smooth' });
+
+            if (ticketDetailsSection.style.display === 'none') { showForm(); }
+
             handleUserNotes(ticketNotes, ticket.id);
 
             if (isOffline) {
@@ -298,19 +340,33 @@ const populateTickets = (tickets) => {
     });
 };
 
+const keyboardNavigationHandler = event => {
+    console.log("key pressed");
+    console.log(event);
+    event.preventDefault();
+    if (event.key === 'ArrowLeft') {
+        goToPreviousTicket();
+    }
+    else if (event.key === 'ArrowRight') {
+        goToNextTicket();
+    }
+};
+
 const showForm = () => {
     document.getElementById('ticket-list').style.display = 'none';
     document.getElementById('ticket-details').style.display = 'block';
     document.querySelector('div.settings-bar').style.display = 'none';
+    document.addEventListener('keyup', keyboardNavigationHandler);
 };
 
 const hideForm = () => {
     document.getElementById('ticket-details').style.display = 'none';
     document.getElementById('ticket-list').style.display = 'block';
     document.querySelector('div.settings-bar').style.display = 'flex';
+    document.removeEventListener('keyup', keyboardNavigationHandler);
 };
 
-const getJiraTransitions = async (ticketId) => {
+const getJiraTransitions = async ticketId => {
     if (isOffline) {
         console.log('Offline mode - skipping transition fetch');
         return [];
@@ -568,16 +624,49 @@ const prepareMainSection = async () => {
 
 const prepareSettingsUI = () => {
     const settingsInputElems = document.getElementsByClassName('settings-input');
-    [...settingsInputElems].forEach((elem) => {
-        loadSettings(settings => {
+    loadSettings(settings => {
+        [...settingsInputElems].forEach((elem) => {
             elem.checked = settings[elem.id];
             applySetting(elem.id, elem.checked);
-        });
-        elem.addEventListener('change', (event) => {
-            saveSetting(event.target.id, event.target.checked);
+            elem.addEventListener('change', (event) => {
+                saveSetting(event.target.id, event.target.checked);
+            });
         });
     })
 };
+const goToNextTicket = () => {
+    const storyElems = [...document.querySelectorAll('.ticket')];
+    const storyIds = storyElems.map(ticketElem => ticketElem.dataset.id);
+    const currentIndex = storyIds.indexOf(document.getElementById('ticket-id').value);
+
+    if (currentIndex < storyElems.length - 1) {
+        storyElems[currentIndex + 1].click();
+    }
+}
+
+const goToPreviousTicket = () => {
+    const storyElems = [...document.querySelectorAll('.ticket')];
+    const storyIds = storyElems.map(ticketElem => ticketElem.dataset.id);
+    const currentIndex = storyIds.indexOf(document.getElementById('ticket-id').value);
+
+    if (currentIndex > 0) {
+        storyElems[currentIndex - 1].click();
+    }
+}
+const prepareNavButtons = () => {
+    const navigationSection = document.querySelector('#ticket-details div.navigation-section');
+
+    const prevButton = document.createElement('button');
+    prevButton.textContent = '⬅️';
+    prevButton.onclick = goToPreviousTicket;
+
+    const nextButton = document.createElement('button');
+    nextButton.textContent = '➡️';
+    nextButton.onclick = goToNextTicket;
+
+    navigationSection.appendChild(prevButton);
+    navigationSection.appendChild(nextButton);
+}
 
 const applySetting = (setting, userChoice) => {
     switch (setting) {
@@ -599,4 +688,5 @@ const reloadContent = () => {
 document.addEventListener('DOMContentLoaded', () => {
     prepareSettingsUI();
     prepareMainSection();
+    prepareNavButtons();
 });
