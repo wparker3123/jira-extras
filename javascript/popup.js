@@ -1,7 +1,43 @@
 let isOffline = false;
+
 const defaultSettings = {
     collapseDescription: true,
     theme: 'auto'
+};
+
+// Configuration object - will be loaded from storage
+const config = {
+    JIRA_DOMAIN: null,
+    BOARD_ID: null,
+    PROJECT_KEY: null
+};
+
+// Configuration management functions
+const loadConfig = async () => {
+    return new Promise((resolve) => {
+        chrome.storage.sync.get(['jiraConfig'], (result) => {
+            const savedConfig = result.jiraConfig || {};
+            config.JIRA_DOMAIN = savedConfig.JIRA_DOMAIN || null;
+            config.BOARD_ID = savedConfig.BOARD_ID || null;
+            config.PROJECT_KEY = savedConfig.PROJECT_KEY || null;
+            resolve(config);
+        });
+    });
+};
+
+const saveConfig = async (newConfig) => {
+    return new Promise((resolve) => {
+        config.JIRA_DOMAIN = newConfig.JIRA_DOMAIN;
+        config.BOARD_ID = newConfig.BOARD_ID;
+        config.PROJECT_KEY = newConfig.PROJECT_KEY;
+        chrome.storage.sync.set({ jiraConfig: config }, () => {
+            resolve(config);
+        });
+    });
+};
+
+const isConfigured = () => {
+    return config.JIRA_DOMAIN && config.BOARD_ID && config.PROJECT_KEY;
 };
 
 const loadSettings = (callback) => {
@@ -24,8 +60,9 @@ const saveSetting = (setting, newVal) => {
 const getHeaders = () => {
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", "YOUR_TOKEN_HERE");
 
+    // may not be necessary, seems to capture cookie containing sso token automatically
+    // myHeaders.append("Authorization", "YOUR_TOKEN_HERE");
     return myHeaders;
 }
 
@@ -49,7 +86,7 @@ const populatedFromCache = () => {
     const diff = currentTimestamp - cacheTimestamp;
     const diffSeconds = diff / 1000;
 
-    if (diffSeconds > 120) { return false; }
+    if (diffSeconds > 60) { return false; }
     if (!storyCache.stories?.length) { return false; }
 
     populateTickets(storyCache.stories);
@@ -66,7 +103,7 @@ const getAvailableSprints = async () => {
 
     return new Promise((resolve, reject) => {
         try {
-            fetch("https://YOUR_JIRA_DOMAIN/rest/agile/1.0/board/YOUR_BOARD_ID/sprint", requestOptions)
+            fetch(`${config.JIRA_DOMAIN}/rest/agile/1.0/board/${config.BOARD_ID}/sprint`, requestOptions)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error("Failed to fetch sprints");
@@ -104,11 +141,11 @@ const getActiveJiraStories = async () => {
     const requestOptions = {
         method: "GET",
         headers: myHeaders,
-        redirect: "follow"
+        credentials: 'include'
     };
     return new Promise((resolve, reject) => {
         try {
-            fetch("https://YOUR_JIRA_DOMAIN/rest/agile/1.0/board/YOUR_BOARD_ID/issue?jql=assignee=currentUser() AND sprint in openSprints()", requestOptions)
+            fetch(`${config.JIRA_DOMAIN}/rest/agile/1.0/board/${config.BOARD_ID}/issue?jql=assignee=currentUser() AND sprint in openSprints()`, requestOptions)
                 .then((response) => {
                     if (!response.ok) {
                         throw new Error("Get Active Jira Stories response was not ok");
@@ -260,7 +297,7 @@ const populateTickets = (tickets) => {
 
         const div = document.createElement('div');
         const ticketLink = document.createElement('a');
-        ticketLink.href = `https://YOUR_JIRA_DOMAIN/browse/${ticket.id}`;
+        ticketLink.href = `https://${config.JIRA_DOMAIN}/browse/${ticket.id}`;
         ticketLink.target = '_blank';
         ticketLink.innerHTML = `<strong>${ticket.id}</strong>`;
         div.appendChild(ticketLink);
@@ -269,7 +306,7 @@ const populateTickets = (tickets) => {
         div.dataset.id = ticket.id;
         div.addEventListener('click', () => {
             ticketIdInput.value = ticket.id;
-            ticketJiraLink.href = `https://YOUR_JIRA_DOMAIN/browse/${ticket.id}`;
+            ticketJiraLink.href = `https://${config.JIRA_DOMAIN}/browse/${ticket.id}`;
             ticketSummaryInput.value = ticket.summary;
             ticketStatusSlider.noUiSlider.set(statusOptions.indexOf(ticket.status));
             ticketDescription.innerHTML = formatJiraDescription(ticket.description);
@@ -382,7 +419,7 @@ const getJiraTransitions = async ticketId => {
 
     return new Promise((resolve, reject) => {
         try {
-            fetch(`https://YOUR_JIRA_DOMAIN/rest/api/2/issue/${ticketId}/transitions`, requestOptions)
+            fetch(`${config.JIRA_DOMAIN}/rest/api/2/issue/${ticketId}/transitions`, requestOptions)
                 .then((response) => {
                     if (!response.ok) {
                         throw new Error("Get Jira Transitions response was not ok");
@@ -441,7 +478,7 @@ const updateJiraStatus = async (ticketId, statusId) => {
 
     return new Promise((resolve, reject) => {
         try {
-            fetch(`https://YOUR_JIRA_DOMAIN/rest/api/2/issue/${ticketId}/transitions`, requestOptions)
+            fetch(`${config.JIRA_DOMAIN}/rest/api/2/issue/${ticketId}/transitions`, requestOptions)
                 .then((response) => {
                     if (!response.ok) {
                         throw new Error("Update Jira Status response was not ok");
@@ -478,7 +515,7 @@ const getAssigneesFromBoard = async (boardId) => {
 
     return new Promise((resolve, reject) => {
         try {
-            fetch(`https://YOUR_JIRA_DOMAIN/rest/agile/1.0/board/${boardId}/issue`, requestOptions)
+            fetch(`${config.JIRA_DOMAIN}/rest/agile/1.0/board/${boardId}/issue`, requestOptions)
                 .then((response) => {
                     if (!response.ok) {
                         throw new Error("Get Board Issues response was not ok");
@@ -510,7 +547,7 @@ const getAssigneesFromBoard = async (boardId) => {
 const populateAssignees = async (currentAssignee) => {
     const assigneeSelect = document.getElementById('ticket-assignee');
     assigneeSelect.options.length = 0;
-    await getAssigneesFromBoard(YOUR_BOARD_ID)
+    await getAssigneesFromBoard(config.BOARD_ID)
         .then(rawAssignees => {
             const assignees = rawAssignees.map(JSON.parse);
             return [...new Set(assignees)];
@@ -550,7 +587,7 @@ const updateJiraAssignee = async (ticketId, assigneeUserName) => {
 
     return new Promise((resolve, reject) => {
         try {
-            fetch(`https://YOUR_JIRA_DOMAIN/rest/api/2/issue/${ticketId}/assignee`, requestOptions)
+            fetch(`${config.JIRA_DOMAIN}/rest/api/2/issue/${ticketId}/assignee`, requestOptions)
                 .then((response) => {
                     if (!response.ok) {
                         throw new Error("Update Jira Assignee response was not ok");
@@ -596,7 +633,15 @@ const handleUserNotes = (noteElement, storyId) => {
 };
 
 const prepareMainSection = async () => {
-    if (populatedFromCache()) { return; }
+    if (populatedFromCache()) {
+        // Apply settings after content is loaded from cache
+        loadSettings(settings => {
+            Object.keys(settings).forEach(setting => {
+                applySetting(setting, settings[setting]);
+            });
+        });
+        return;
+    }
 
     const mainSection = document.querySelector('main').innerHTML;
     document.querySelector('main').innerHTML = "<h1>Loading...</h1>";
@@ -608,6 +653,13 @@ const prepareMainSection = async () => {
         }
         updateJiraStoryCache(tickets);
         populateTickets(tickets);
+
+        // Apply settings after content is loaded
+        loadSettings(settings => {
+            Object.keys(settings).forEach(setting => {
+                applySetting(setting, settings[setting]);
+            });
+        });
     }).catch((error) => {
         console.log("Error fetching active Jira stories: ", error);
         isOffline = true;
@@ -621,6 +673,13 @@ const prepareMainSection = async () => {
         setTimeout(() => {
             document.querySelector('main').innerHTML = mainSection;
             populateTickets(cachedTickets.stories);
+
+            // Apply settings after content is loaded
+            loadSettings(settings => {
+                Object.keys(settings).forEach(setting => {
+                    applySetting(setting, settings[setting]);
+                });
+            });
         }, 1000);
     });
 };
@@ -675,11 +734,15 @@ const applySetting = (setting, userChoice) => {
     switch (setting) {
         case 'collapseDescription':
             collapseDescription(userChoice);
+            break;
     }
 };
 
 const collapseDescription = (isCollapsed) => {
-    document.querySelector('details.description-container').open = !isCollapsed;
+    const descriptionContainer = document.querySelector('details.description-container');
+    if (descriptionContainer) {
+        descriptionContainer.open = !isCollapsed;
+    }
 };
 
 const reloadContent = () => {
@@ -688,8 +751,154 @@ const reloadContent = () => {
     //setTimeout(prepareMainSection(), 2000);
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+// Configuration UI functions
+const showConfigSection = () => {
+    document.getElementById('config-section').style.display = 'block';
+    document.querySelector('main').style.display = 'none';
+    document.querySelector('.settings-bar').style.display = 'none';
+
+    // Pre-fill any existing config
+    if (config.JIRA_DOMAIN) {
+        document.getElementById('jira-domain').value = config.JIRA_DOMAIN.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    }
+    if (config.BOARD_ID) {
+        document.getElementById('board-id').value = config.BOARD_ID;
+    }
+    if (config.PROJECT_KEY) {
+        document.getElementById('project-key').value = config.PROJECT_KEY;
+    }
+};
+
+const hideConfigSection = () => {
+    document.getElementById('config-section').style.display = 'none';
+    document.querySelector('main').style.display = 'block';
+    document.querySelector('.settings-bar').style.display = 'flex';
+};
+
+const showConfigStatus = (message, isSuccess = true) => {
+    const statusEl = document.getElementById('config-status');
+    statusEl.textContent = message;
+    statusEl.className = `config-status ${isSuccess ? 'success' : 'error'}`;
+    statusEl.style.display = 'block';
+
+    if (isSuccess) {
+        setTimeout(() => {
+            statusEl.style.display = 'none';
+        }, 3000);
+    }
+};
+
+// Test Jira connection
+const testJiraConnection = async (testConfig) => {
+    try {
+        const response = await fetch(`${testConfig.JIRA_DOMAIN}/rest/api/2/myself`, {
+            method: 'GET',
+            headers: getHeaders(),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const user = await response.json();
+        return { success: true, user };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+};
+
+// Handle configuration form submission
+const handleConfigSubmit = async (event) => {
+    event.preventDefault();
+
+    const domain = document.getElementById('jira-domain').value.trim();
+    const boardId = document.getElementById('board-id').value.trim();
+    const projectKey = document.getElementById('project-key').value.trim().toUpperCase();
+
+    if (!domain || !boardId || !projectKey) {
+        showConfigStatus('Please fill in all fields', false);
+        return;
+    }
+
+    // Clean up domain format
+    const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+    const newConfig = {
+        JIRA_DOMAIN: `https://${cleanDomain}`,
+        BOARD_ID: boardId,
+        PROJECT_KEY: projectKey
+    };
+
+    showConfigStatus('Testing connection...', true);
+
+    // Test the configuration
+    const testResult = await testJiraConnection(newConfig);
+
+    if (testResult.success) {
+        await saveConfig(newConfig);
+        showConfigStatus(`✅ Connected successfully! Welcome, ${testResult.user.displayName}`, true);
+
+        setTimeout(() => {
+            hideConfigSection();
+            configureExtensionUI();
+        }, 2000);
+    } else {
+        showConfigStatus(`❌ Connection failed: ${testResult.error}. Make sure you're logged into Jira.`, false);
+    }
+};
+
+// Handle test connection button
+const handleTestConnection = async () => {
+    const domain = document.getElementById('jira-domain').value.trim();
+
+    if (!domain) {
+        showConfigStatus('Please enter a Jira domain first', false);
+        return;
+    }
+
+    const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const testConfig = { JIRA_DOMAIN: `https://${cleanDomain}` };
+
+    showConfigStatus('Testing connection...', true);
+
+    const testResult = await testJiraConnection(testConfig);
+
+    if (testResult.success) {
+        showConfigStatus(`✅ Connection successful! Hello, ${testResult.user.displayName}`, true);
+    } else {
+        showConfigStatus(`❌ Connection failed: ${testResult.error}`, false);
+    }
+};
+
+// Initialize the extension
+const initializeExtension = async () => {
+    await loadConfig();
+
+    if (isConfigured()) {
+        configureExtensionUI();
+    } else {
+        showConfigSection();
+    }
+};
+
+const configureExtensionUI = () => {
     prepareSettingsUI();
     prepareMainSection();
     prepareNavButtons();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Add config form listeners
+    document.getElementById('config-form').addEventListener('submit', handleConfigSubmit);
+    document.getElementById('test-connection').addEventListener('click', handleTestConnection);
+    document.getElementById('cancel-config').addEventListener('click', hideConfigSection);
+
+    // Add reset config listener
+    document.getElementById('reset-config').addEventListener('click', () => {
+        showConfigSection();
+    });
+
+    // Initialize the extension
+    initializeExtension();
 });

@@ -9,7 +9,42 @@
 </head>
 <body>
     <script src="libraries/nouislider/nouislider.min.js"></script>
-    <div class="settings-bar">
+    <!-- Configuration Section -->
+    <section id="config-section" style="display: none;">
+        <div class="config-container">
+            <h2>🚀 Welcome to Jira Extras!</h2>
+            <p>Let's set up your Jira connection:</p>
+            
+            <form id="config-form">
+                <div class="config-field">
+                    <label for="jira-domain">Jira Domain:</label>
+                    <input type="text" id="jira-domain" placeholder="your-company.atlassian.net" required>
+                    <small>Enter your Jira domain (without https://www)</small>
+                </div>
+                
+                <div class="config-field">
+                    <label for="board-id">Board ID:</label>
+                    <input type="text" id="board-id" placeholder="1234" required>
+                    <small>Found in your Jira board URL: /secure/RapidBoard.jspa?rapidView=<strong>1234</strong></small>
+                </div>
+                
+                <div class="config-field">
+                    <label for="project-key">Project Key:</label>
+                    <input type="text" id="project-key" placeholder="PROJ" required>
+                    <small>Your project's key (likely found at beginning of team's stories/tickets)</small>
+                </div>
+                
+                <div class="config-actions">
+                    <button type="submit" id="submit-config">Save & Continue</button>
+                    <button type="button" id="test-connection">Test Connection</button>
+                    <button type="button" id="cancel-config">Cancel</button>
+                </div>
+            </form>
+            
+            <div id="config-status" class="config-status"></div>
+        </div>
+    </section>
+    <div class="settings-bar">        
         <div>
             <span>Collapse Description</span>
             <label class="switch" id="description-switch">
@@ -23,11 +58,13 @@
             <div class="theme-toggle" data-theme="auto">
               <div class="icon" data-theme-value="auto">A</div>
               <div class="icon" data-theme-value="light">☀️</div>
-              <div class="icon" data-theme-value="dark">🌙</div>
-              <div class="slider" id="theme" class="settings-input"></div>
+              <div class="icon" data-theme-value="dark">🌙</div>            <div class="slider" id="theme" class="settings-input"></div>
             </div>
         </div>
+        
+        <div><button type="button" id="reset-config" style="margin-left: auto;">⚙️ Reconfigure</button></div>
     </div>
+    <!-- Main Ticket View Section -->
     <main>
         <section id="ticket-list">
             <h2 class="story-categories">In-Progress</h2>
@@ -43,6 +80,7 @@
                 <!-- completed tickets will be dynamically populated here -->
             </div>
         </section>
+        <!-- Detailed Ticket View Section -->
         <section id="ticket-details" style="display: none;">
             <div class="ticket-header">
                 <h2>Story Details</h2>
