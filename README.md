@@ -81,7 +81,6 @@ A Chrome extension that enhances your Jira experience with productivity features
 ### Keyboard Shortcuts
 - `←` - Previous story
 - `→` - Next story
-- `Esc` - Close story details (planned feature)
 
 ### Context Menu
 - Select any Jira ticket ID on any webpage
