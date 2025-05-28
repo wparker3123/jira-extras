@@ -447,6 +447,7 @@ const updateJiraStatus = async (ticketId, statusId) => {
                         throw new Error("Update Jira Status response was not ok");
                     }
                     localStorage.removeItem('jiraStoryCache');
+                    reloadContent();
                     resolve(response);
                 })
                 .catch((error) => {
@@ -555,6 +556,7 @@ const updateJiraAssignee = async (ticketId, assigneeUserName) => {
                         throw new Error("Update Jira Assignee response was not ok");
                     }
                     localStorage.removeItem('jiraStoryCache');
+                    reloadContent();
                     resolve(response);
                 })
                 .catch((error) => {
@@ -596,9 +598,10 @@ const handleUserNotes = (noteElement, storyId) => {
 const prepareMainSection = async () => {
     if (populatedFromCache()) { return; }
 
-    document.getElementById('tickets').innerHTML = "<h1>Loading...</h1>";
+    const mainSection = document.querySelector('main').innerHTML;
+    document.querySelector('main').innerHTML = "<h1>Loading...</h1>";
     await getActiveJiraStories().then((tickets) => {
-        document.getElementById('tickets').innerHTML = "";
+        document.querySelector('main').innerHTML = mainSection;
         if (!tickets?.length) {
             console.log('No active Jira stories found or error fetching active Jira stories');
             return;
@@ -608,15 +611,15 @@ const prepareMainSection = async () => {
     }).catch((error) => {
         console.log("Error fetching active Jira stories: ", error);
         isOffline = true;
-        document.getElementById('tickets').innerHTML = "<h1>Loading from cache...</h1>";
+        document.querySelector('main').innerHTML = "<h1>Loading from cache...</h1>";
         const cachedTickets = getJiraStoryCache();
         if (!cachedTickets.stories?.length) {
             console.error('No cached Jira stories found');
-            document.getElementById('tickets').innerHTML = "<h1>Offline mode - No cached Jira stories found</h1>";
+            document.querySelector('main').innerHTML = "<h1>Offline mode - No cached Jira stories found</h1>";
             return;
         }
         setTimeout(() => {
-            document.getElementById('tickets').innerHTML = "";
+            document.querySelector('main').innerHTML = mainSection;
             populateTickets(cachedTickets.stories);
         }, 1000);
     });
@@ -680,9 +683,9 @@ const collapseDescription = (isCollapsed) => {
 };
 
 const reloadContent = () => {
-    document.getElementById('tickets').innerHTML = "<h1>Reloading...</h1>";
-
-    setTimeout(prepareMainSection(), 2000);
+    document.querySelector('main').innerHTML = "<h1>Reloading...</h1>";
+    setTimeout(location.reload(), 500);
+    //setTimeout(prepareMainSection(), 2000);
 };
 
 document.addEventListener('DOMContentLoaded', () => {
