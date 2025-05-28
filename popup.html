@@ -9,54 +9,116 @@
 </head>
 <body>
     <script src="libraries/nouislider/nouislider.min.js"></script>
-    <!-- <header>
-        <h1>Jira Extras</h1>
-    </header> -->
+    <!-- Configuration Section -->
+    <section id="config-section" style="display: none;">
+        <div class="config-container">
+            <h2>🚀 Welcome to Jira Extras!</h2>
+            <p>Let's set up your Jira connection:</p>
+            
+            <form id="config-form">
+                <div class="config-field">
+                    <label for="jira-domain">Jira Domain:</label>
+                    <input type="text" id="jira-domain" placeholder="your-company.atlassian.net" required>
+                    <small>Enter your Jira domain (without https://www)</small>
+                </div>
+                
+                <div class="config-field">
+                    <label for="board-id">Board ID:</label>
+                    <input type="text" id="board-id" placeholder="1234" required>
+                    <small>Found in your Jira board URL: /secure/RapidBoard.jspa?rapidView=<strong>1234</strong></small>
+                </div>
+                
+                <div class="config-field">
+                    <label for="project-key">Project Key:</label>
+                    <input type="text" id="project-key" placeholder="PROJ" required>
+                    <small>Your project's key (likely found at beginning of team's stories/tickets)</small>
+                </div>
+                
+                <div class="config-actions">
+                    <button type="submit" id="submit-config">Save & Continue</button>
+                    <button type="button" id="test-connection">Test Connection</button>
+                    <button type="button" id="cancel-config">Cancel</button>
+                </div>
+            </form>
+            
+            <div id="config-status" class="config-status"></div>
+        </div>
+    </section>
+    <div class="settings-bar">        
+        <div>
+            <span>Collapse Description</span>
+            <label class="switch" id="description-switch">
+                <input type="checkbox" id="collapseDescription" class="settings-input">
+                <span class="slider-round"></span>
+            </label>
+        </div>
+        
+        <div class="theme-container">
+            <span>Theme</span>
+            <div class="theme-toggle" data-theme="auto">
+              <div class="icon" data-theme-value="auto">A</div>
+              <div class="icon" data-theme-value="light">☀️</div>
+              <div class="icon" data-theme-value="dark">🌙</div>            <div class="slider" id="theme" class="settings-input"></div>
+            </div>
+        </div>
+        
+        <div><button type="button" id="reset-config" style="margin-left: auto;">⚙️ Reconfigure</button></div>
+    </div>
+    <!-- Main Ticket View Section -->
     <main>
         <section id="ticket-list">
-            <h2>Active Stories</h2>
-            <div id="active-tickets">
+            <h2 class="story-categories">In-Progress</h2>
+            <div id="active-tickets" class="ticket-view">
                 <!-- active tickets will be dynamically populated here -->
             </div>
-            <h2>Current Sprint Stories</h2>
-            <div id="tickets">
+            <h2 class="story-categories">Backlog</h2>
+            <div id="tickets" class="ticket-view">
                 <!-- Tickets will be dynamically populated here -->
             </div>
+            <h2 class="story-categories">Completed</h2><i class="fa fa-chevron-down"></i>
+            <div id="completed-tickets" class="ticket-view">
+                <!-- completed tickets will be dynamically populated here -->
+            </div>
         </section>
+        <!-- Detailed Ticket View Section -->
         <section id="ticket-details" style="display: none;">
-            <h2>Story Details</h2>
+            <div class="ticket-header">
+                <h2>Story Details</h2>
+                <div class="navigation-section">
+                </div>
+            </div>
+            
             <form id="ticket-form">
                 <label for="ticket-id">Story ID:</label>
                 <input type="text" id="ticket-id" name="ticket-id" readonly>
+                <a href="#" id="jira-link" target="_blank">View in Jira</a>
 
                 <label for="ticket-summary">Summary:</label>
                 <input type="text" id="ticket-summary" name="ticket-summary" readonly>
+                
+                <details class="description-container">
+                    <summary>Description</summary>
+                    <div id="ticket-description" name="ticket-description" class="description-content" readonly></div>
+                </details>
+
+                <details id="note-container" class="description-container">
+                    <summary>Notes</summary>
+                    <textarea id="ticket-notes" class="description-content"></textarea>
+                    <p id="save-status" class="save-status" ></p>
+                </details>
 
                 <label for="ticket-status-slider">Story Status (<span id="ticket-status-label">To Do</span>):</label>
                 <div id="ticket-status-slider"></div>
                 <br><br>
-                <!-- <select id="ticket-status" name="ticket-status">
-                    <option value="To Do">To Do</option>
-                    <option value="Backlog">Backlog</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Ready for QA">Ready for QA</option>
-                    <option value="Testing">Testing</option>
-                    <option value="Accepted">Accepted</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Blocked">Blocked</option>
-                </select> -->
 
                 <label for="ticket-assignee">Assignee:</label>
-                <input type="text" id="ticket-assignee" name="ticket-assignee">
-
-                <button type="button" id="update-status">Update Status</button>
+                <select id="ticket-assignee" name="ticket-assignee"></select>
+                    <!-- Assignees will be dynamically populated here -->
+                <button type="button" id="update-assignee">Update Assignee</button>
                 <button type="button" id="close-details">Close</button>
             </form>
         </section>
     </main>
-    <!-- <footer>
-        <p>&copy; 2023 Jira Extras</p>
-    </footer> -->
     <script src="javascript/popup.js" defer></script>
 </body>
 </html>
