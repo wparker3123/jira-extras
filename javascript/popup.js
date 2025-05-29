@@ -297,7 +297,7 @@ const populateTickets = (tickets) => {
 
         const div = document.createElement('div');
         const ticketLink = document.createElement('a');
-        ticketLink.href = `https://${config.JIRA_DOMAIN}/browse/${ticket.id}`;
+        ticketLink.href = `${config.JIRA_DOMAIN}/browse/${ticket.id}`;
         ticketLink.target = '_blank';
         ticketLink.innerHTML = `<strong>${ticket.id}</strong>`;
         div.appendChild(ticketLink);
@@ -306,7 +306,7 @@ const populateTickets = (tickets) => {
         div.dataset.id = ticket.id;
         div.addEventListener('click', () => {
             ticketIdInput.value = ticket.id;
-            ticketJiraLink.href = `https://${config.JIRA_DOMAIN}/browse/${ticket.id}`;
+            ticketJiraLink.href = `${config.JIRA_DOMAIN}/browse/${ticket.id}`;
             ticketSummaryInput.value = ticket.summary;
             ticketStatusSlider.noUiSlider.set(statusOptions.indexOf(ticket.status));
             ticketDescription.innerHTML = formatJiraDescription(ticket.description);
