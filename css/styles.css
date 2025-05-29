@@ -125,10 +125,6 @@ footer {
 	padding: 10px 0;
 }
 
-/* h1, h2, .save-status {
-    color: #333;
-} */
-
 main {
 	display: flex;
 	flex-direction: column;
@@ -464,7 +460,6 @@ details[open]::details-content {
 	color: #ffebe6;
 }
 
-/* Dark mode config styles */
 @media (prefers-color-scheme: dark) {
 	#config-section {
 		background-color: #1d2125;
@@ -496,7 +491,6 @@ details[open]::details-content {
 	}
 }
 
-/* Reconfigure button styling */
 #reset-config {
 	font-size: 12px;
 }
@@ -507,7 +501,6 @@ details[open]::details-content {
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
-/* Dark mode for reconfigure button */
 @media (prefers-color-scheme: dark) {
 	#reset-config {
 		background-color: #374151 !important;
