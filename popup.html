@@ -37,7 +37,7 @@
                 <div class="config-actions">
                     <button type="submit" id="submit-config">Save & Continue</button>
                     <button type="button" id="test-connection">Test Connection</button>
-                    <button type="button" id="cancel-config">Cancel</button>
+                    <button type="button" class="cancel-btn" id="cancel-config">Cancel</button>
                 </div>
             </form>
             
@@ -91,7 +91,7 @@
             <form id="ticket-form">
                 <label for="ticket-id">Story ID:</label>
                 <input type="text" id="ticket-id" name="ticket-id" readonly>
-                <a href="#" id="jira-link" target="_blank">View in Jira</a>
+                <a href="#" id="jira-link" target="_blank">View in Jira ↗️</a>
 
                 <label for="ticket-summary">Summary:</label>
                 <input type="text" id="ticket-summary" name="ticket-summary" readonly>
@@ -114,8 +114,8 @@
                 <label for="ticket-assignee">Assignee:</label>
                 <select id="ticket-assignee" name="ticket-assignee"></select>
                     <!-- Assignees will be dynamically populated here -->
-                <button type="button" id="update-assignee">Update Assignee</button>
-                <button type="button" id="close-details">Close</button>
+                <button type="button" class="ticket-details-btn" id="update-assignee">Update Assignee</button>
+                <button type="button" class="ticket-details-btn cancel-btn" id="close-details">Close</button>
             </form>
         </section>
     </main>
