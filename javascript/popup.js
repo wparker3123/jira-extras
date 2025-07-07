@@ -268,6 +268,12 @@ const formatJiraDescription = (text) => {
     return text;
 };
 
+const populateTicketCounts = () => {
+    document.querySelector("#active-count").innerHTML = document.querySelector("#active-tickets").children.length;
+    document.querySelector("#backlog-count").innerHTML = document.querySelector("#tickets").children.length;
+    document.querySelector("#completed-count").innerHTML = document.querySelector("#completed-tickets").children.length;
+};
+
 const populateTickets = (tickets) => {
     const ticketList = document.getElementById('tickets');
     const activeTickets = document.getElementById('active-tickets');
@@ -299,8 +305,8 @@ const populateTickets = (tickets) => {
         ticketLink.target = '_blank';
         ticketLink.innerHTML = `<strong>${ticket.id}</strong>`;
         div.appendChild(ticketLink);
-        div.className = 'ticket';
-        div.innerHTML += `<br><p>${ticket.summary}</p>`;
+        div.className = 'bg-slate-100 dark:bg-slate-700 p-3 rounded-lg shadow-sm border border-slate-200 dark:border-slate-600 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105 hover:bg-slate-50 dark:hover:bg-slate-600 w-40 min-h-12';
+        div.innerHTML += `<br><p class="text-xs text-slate-600 dark:text-slate-300 mt-1 line-clamp-5">${ticket.summary}</p>`;
         div.dataset.id = ticket.id;
         div.addEventListener('click', () => {
             ticketIdInput.value = ticket.id;
@@ -373,6 +379,8 @@ const populateTickets = (tickets) => {
     document.getElementById('close-details').addEventListener('click', () => {
         hideForm();
     });
+
+    populateTicketCounts();
 };
 
 const keyboardNavigationHandler = event => {

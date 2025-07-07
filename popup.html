@@ -6,6 +6,7 @@
     <title>Jira Extras</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="libraries/nouislider/nouislider.min.css">
+    <script src="libraries/tailwind/tailwind.min.js"></script>
 </head>
 <body>
     <script src="libraries/nouislider/nouislider.min.js"></script>
@@ -44,8 +45,8 @@
             <div id="config-status" class="config-status"></div>
         </div>
     </section>
-    <div class="settings-bar">        
-        <div>
+    <div class="flex gap-4 items-center min-h-[25px] justify-end">        
+        <div class="inline-flex items-center gap-2 min-w-[100px]">
             <span>Collapse Description</span>
             <label class="switch" id="description-switch">
                 <input type="checkbox" id="collapseDescription" class="settings-input">
@@ -53,7 +54,7 @@
             </label>
         </div>
         
-        <div class="theme-container">
+        <div class="inline-flex items-center gap-2 min-w-[100px]">
             <span>Theme</span>
             <div class="theme-toggle" data-theme="auto">
               <div class="icon" data-theme-value="auto">A</div>
@@ -63,22 +64,59 @@
             </div>
         </div>
         
-        <div><button type="button" id="reset-config" style="margin-left: auto;">⚙️ Reconfigure</button></div>
+        <div><button type="button" id="reset-config" class="ml-auto">⚙️ Reconfigure</button></div>
     </div>
     <!-- Main Ticket View Section -->
     <main>
-        <section id="ticket-list">
-            <h2 class="story-categories">In-Progress</h2>
-            <div id="active-tickets" class="ticket-view">
-                <!-- active tickets will be dynamically populated here -->
+        <section id="ticket-list" class="max-w-4xl space-y-12">
+            <!-- In-Progress Section -->
+            <div class="space-y-4">
+                <div class="relative">
+                    <div class="absolute -left-4 top-1 w-2 h-6 bg-blue-500 rounded-full"></div>
+                    <div class="flex items-baseline justify-between">
+                        <h2 class="text-2xl font-light text-gray-800 dark:text-gray-200">In-Progress</h2>
+                        <span class="text-sm text-gray-500 tabular-nums"><span id="active-count">0</span> tickets</span>
+                    </div>
+                    <div class="w-full h-px bg-gradient-to-r from-blue-200 via-blue-100 to-transparent mt-2"></div>
+                </div>
+                <div id="active-tickets" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-4">
+                    <!-- tickets here -->
+                </div>
             </div>
-            <h2 class="story-categories">Backlog</h2>
-            <div id="tickets" class="ticket-view">
-                <!-- Tickets will be dynamically populated here -->
+        
+            <!-- Backlog Section -->
+            <div class="space-y-4">
+                <div class="relative">
+                    <div class="absolute -left-4 top-1 w-2 h-6 bg-amber-500 rounded-full"></div>
+                    <div class="flex items-baseline justify-between">
+                        <h2 class="text-2xl font-light text-gray-800 dark:text-gray-200">Backlog</h2>
+                        <span class="text-sm text-gray-500 tabular-nums"><span id="backlog-count">0</span> tickets</span>
+                    </div>
+                    <div class="w-full h-px bg-gradient-to-r from-amber-200 via-amber-100 to-transparent mt-2"></div>
+                </div>
+                <div id="tickets" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-4">
+                    <!-- tickets here -->
+                </div>
             </div>
-            <h2 class="story-categories">Completed</h2><i class="fa fa-chevron-down"></i>
-            <div id="completed-tickets" class="ticket-view">
-                <!-- completed tickets will be dynamically populated here -->
+        
+            <!-- Completed Section -->
+            <div class="space-y-4">
+                <details class="group">
+                    <summary class="relative cursor-pointer list-none">
+                        <div class="absolute -left-4 top-1 w-2 h-6 bg-emerald-500 rounded-full"></div>
+                        <div class="flex items-baseline justify-between">
+                            <h2 class="text-2xl font-light text-gray-800 dark:text-gray-200 flex items-center gap-3">
+                                Completed
+                                <i class="fa fa-chevron-down text-lg transition-transform group-open:rotate-180 text-gray-400"></i>
+                            </h2>
+                            <span class="text-sm text-gray-500 tabular-nums"><span id="completed-count">0</span> tickets</span>
+                        </div>
+                        <div class="w-full h-px bg-gradient-to-r from-emerald-200 via-emerald-100 to-transparent mt-2"></div>
+                    </summary>
+                    <div id="completed-tickets" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-4 mt-4">
+                        <!-- tickets here -->
+                    </div>
+                </details>
             </div>
         </section>
         <!-- Detailed Ticket View Section -->
