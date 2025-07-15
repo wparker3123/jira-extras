@@ -279,7 +279,6 @@ const populateTickets = (tickets) => {
     const activeTickets = document.getElementById('active-tickets');
     const completedTickets = document.getElementById('completed-tickets');
     const ticketDetailsSection = document.getElementById('ticket-details');
-    const ticketForm = document.getElementById('ticket-form');
     const ticketIdInput = document.getElementById('ticket-id');
     const ticketSummaryInput = document.getElementById('ticket-summary');
     const ticketStatusSlider = document.getElementById('ticket-status-slider');
@@ -303,9 +302,9 @@ const populateTickets = (tickets) => {
         const ticketLink = document.createElement('a');
         ticketLink.href = `${config.JIRA_DOMAIN}/browse/${ticket.id}`;
         ticketLink.target = '_blank';
-        ticketLink.innerHTML = `<strong>${ticket.id}</strong>`;
+        ticketLink.innerHTML = `<strong class="text-blue-800 dark:text-blue-400">${ticket.id}</strong>`;
         div.appendChild(ticketLink);
-        div.className = 'bg-slate-100 dark:bg-slate-700 p-3 rounded-lg shadow-sm border border-slate-200 dark:border-slate-600 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105 hover:bg-slate-50 dark:hover:bg-slate-600 w-40 min-h-12';
+        div.className = 'bg-slate-100 dark:bg-slate-700 p-2 rounded-lg shadow-sm border border-slate-200 dark:border-slate-600 cursor-pointer transition-all duration-200 hover:shadow-md hover:scale-105 hover:bg-slate-50 dark:hover:bg-slate-600 min-w-150';
         div.innerHTML += `<br><p class="text-xs text-slate-600 dark:text-slate-300 mt-1 line-clamp-5">${ticket.summary}</p>`;
         div.dataset.id = ticket.id;
         div.addEventListener('click', () => {
@@ -401,14 +400,14 @@ const keyboardNavigationHandler = event => {
 const showForm = () => {
     document.getElementById('ticket-list').style.display = 'none';
     document.getElementById('ticket-details').style.display = 'block';
-    document.querySelector('div.settings-bar').style.display = 'none';
+    // document.querySelector('div.settings-bar').style.display = 'none';
     document.addEventListener('keyup', keyboardNavigationHandler);
 };
 
 const hideForm = () => {
     document.getElementById('ticket-details').style.display = 'none';
     document.getElementById('ticket-list').style.display = 'block';
-    document.querySelector('div.settings-bar').style.display = 'flex';
+    // document.querySelector('div.settings-bar').style.display = 'flex';
     document.removeEventListener('keyup', keyboardNavigationHandler);
 };
 
@@ -652,7 +651,8 @@ const prepareMainSection = async () => {
     }
 
     const mainSection = document.querySelector('main').innerHTML;
-    document.querySelector('main').innerHTML = "<h1>Loading...</h1>";
+    const helperTextStyle = "class='text-3xl font-(family-name:--main-font) font-light text-gray-800 dark:text-gray-200'";
+    document.querySelector('main').innerHTML = `<h1 ${helperTextStyle}>Loading...</h1>`;
     await getActiveJiraStories().then((tickets) => {
         document.querySelector('main').innerHTML = mainSection;
         if (!tickets?.length) {
@@ -671,11 +671,11 @@ const prepareMainSection = async () => {
     }).catch((error) => {
         console.log("Error fetching active Jira stories: ", error);
         isOffline = true;
-        document.querySelector('main').innerHTML = "<h1>Loading from cache...</h1>";
+        document.querySelector('main').innerHTML = `<h1 ${helperTextStyle}>Loading from cache...</h1>`;
         const cachedTickets = getJiraStoryCache();
         if (!cachedTickets.stories?.length) {
             console.error('No cached Jira stories found');
-            document.querySelector('main').innerHTML = "<h1>Offline mode - No cached Jira stories found</h1>";
+            document.querySelector('main').innerHTML = `<h1 ${helperTextStyle}>Offline mode - No cached Jira stories found</h1>`;
             return;
         }
         setTimeout(() => {

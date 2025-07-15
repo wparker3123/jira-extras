@@ -45,7 +45,7 @@
             <div id="config-status" class="config-status"></div>
         </div>
     </section>
-    <div class="flex gap-4 items-center min-h-[25px] justify-end">        
+    <div class="settings-bar flex gap-4 items-center min-h-[25px] justify-end">        
         <div class="inline-flex items-center gap-2 min-w-[100px]">
             <span>Collapse Description</span>
             <label class="switch" id="description-switch">
@@ -79,7 +79,7 @@
                     </div>
                     <div class="w-full h-px bg-gradient-to-r from-blue-200 via-blue-100 to-transparent mt-2"></div>
                 </div>
-                <div id="active-tickets" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-4">
+                <div id="active-tickets" class="flex flex-col">
                     <!-- tickets here -->
                 </div>
             </div>
@@ -94,7 +94,7 @@
                     </div>
                     <div class="w-full h-px bg-gradient-to-r from-amber-200 via-amber-100 to-transparent mt-2"></div>
                 </div>
-                <div id="tickets" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-4">
+                <div id="tickets" class="flex flex-col">
                     <!-- tickets here -->
                 </div>
             </div>
@@ -113,17 +113,20 @@
                         </div>
                         <div class="w-full h-px bg-gradient-to-r from-emerald-200 via-emerald-100 to-transparent mt-2"></div>
                     </summary>
-                    <div id="completed-tickets" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-4 mt-4">
+                    <div id="completed-tickets" class="flex flex-col gap-1">
                         <!-- tickets here -->
                     </div>
                 </details>
             </div>
         </section>
         <!-- Detailed Ticket View Section -->
-        <section id="ticket-details" style="display: none;">
-            <span class="back-button">🔙</span>
-            <div class="ticket-header">
+        <section id="ticket-details" class="bg-slate-100 dark:bg-slate-700 p-5 mt-6 rounded-lg shadow-lg" style="display: none;">
+            <div class="text-center text-xl">
                 <h2>Story Details</h2>
+            </div>
+
+            <div class="ticket-header p-2">
+                <span class="back-button">🔙</span>
                 <div class="navigation-section">
                 </div>
             </div>
@@ -131,7 +134,9 @@
             <form id="ticket-form">
                 <label for="ticket-id">Story ID:</label>
                 <input type="text" id="ticket-id" name="ticket-id" readonly>
-                <a href="#" id="jira-link" target="_blank">View in Jira ↗️</a>
+                <a href="#" id="jira-link" target="_blank" class="no-underline text-xs font-(family-name:--main-font) pl-2 text-blue-800 dark:text-blue-400">
+                    View in Jira ↗️
+                </a>
 
                 <label for="ticket-summary">Summary:</label>
                 <input type="text" id="ticket-summary" name="ticket-summary" readonly>
