@@ -5,14 +5,12 @@ const defaultSettings = {
     theme: 'auto'
 };
 
-// Configuration object - will be loaded from storage
 const config = {
     JIRA_DOMAIN: null,
     BOARD_ID: null,
     PROJECT_KEY: null
 };
 
-// Configuration management functions
 const loadConfig = async () => {
     return new Promise((resolve) => {
         chrome.storage.sync.get(['jiraConfig'], (result) => {
@@ -634,7 +632,6 @@ const handleUserNotes = (noteElement, storyId) => {
 
 const prepareMainSection = async () => {
     if (populatedFromCache()) {
-        // Apply settings after content is loaded from cache
         loadSettings(settings => {
             Object.keys(settings).forEach(setting => {
                 applySetting(setting, settings[setting]);
@@ -751,13 +748,11 @@ const reloadContent = () => {
     //setTimeout(prepareMainSection(), 2000);
 };
 
-// Configuration UI functions
 const showConfigSection = () => {
     document.getElementById('config-section').style.display = 'block';
     document.querySelector('main').style.display = 'none';
     document.querySelector('.settings-bar').style.display = 'none';
 
-    // Pre-fill any existing config
     if (config.JIRA_DOMAIN) {
         document.getElementById('jira-domain').value = config.JIRA_DOMAIN.replace(/^https?:\/\//, '').replace(/\/$/, '');
     }
@@ -788,7 +783,6 @@ const showConfigStatus = (message, isSuccess = true) => {
     }
 };
 
-// Test Jira connection
 const testJiraConnection = async (testConfig) => {
     try {
         const response = await fetch(`${testConfig.JIRA_DOMAIN}/rest/api/2/myself`, {
@@ -808,7 +802,6 @@ const testJiraConnection = async (testConfig) => {
     }
 };
 
-// Handle configuration form submission
 const handleConfigSubmit = async (event) => {
     event.preventDefault();
 
@@ -821,7 +814,6 @@ const handleConfigSubmit = async (event) => {
         return;
     }
 
-    // Clean up domain format
     const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
     const newConfig = {
@@ -832,7 +824,6 @@ const handleConfigSubmit = async (event) => {
 
     showConfigStatus('Testing connection...', true);
 
-    // Test the configuration
     const testResult = await testJiraConnection(newConfig);
 
     if (testResult.success) {
@@ -848,7 +839,6 @@ const handleConfigSubmit = async (event) => {
     }
 };
 
-// Handle test connection button
 const handleTestConnection = async () => {
     const domain = document.getElementById('jira-domain').value.trim();
 
@@ -871,7 +861,6 @@ const handleTestConnection = async () => {
     }
 };
 
-// Initialize the extension
 const initializeExtension = async () => {
     await loadConfig();
 
@@ -889,16 +878,13 @@ const configureExtensionUI = () => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Add config form listeners
     document.getElementById('config-form').addEventListener('submit', handleConfigSubmit);
     document.getElementById('test-connection').addEventListener('click', handleTestConnection);
     document.getElementById('cancel-config').addEventListener('click', hideConfigSection);
 
-    // Add reset config listener
     document.getElementById('reset-config').addEventListener('click', () => {
         showConfigSection();
     });
 
-    // Initialize the extension
     initializeExtension();
 });
