@@ -63,9 +63,6 @@ textarea {
 	.story-categories {
 		color: #b6c2cf;
 	}
-	#ticket-details {
-		background-color: rgba(119, 136, 153, 0.5) !important;
-	}
 
 	#ticket-details label {
 		color: #b6c2cf !important;
@@ -167,13 +164,6 @@ main {
 	padding: 1rem 0;
 }
 
-#ticket-details {
-	background-color: white;
-	padding: 20px;
-	border-radius: 8px;
-	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
 form {
 	display: flex;
 	flex-direction: column;
@@ -182,7 +172,6 @@ form {
 
 label {
 	font-weight: bold;
-	/* color: black; */
 }
 
 input,
@@ -207,10 +196,6 @@ button {
 button:hover {
 	opacity: 0.5;
 	transform: scale(1.025);
-}
-
-a {
-	color: #0000ff82;
 }
 
 .description-container {
@@ -243,14 +228,6 @@ a {
 	overflow-y: auto;
 	white-space: pre-wrap;
 	font-family: var(--desc-font);
-}
-
-.settings-bar {
-	display: flex;
-	gap: 2%;
-	align-items: center;
-	min-height: 25px;
-	justify-content: flex-end;
 }
 
 .switch {
@@ -384,12 +361,12 @@ details[open]::details-content {
 	justify-content: space-between;
 }
 
-#jira-link {
+/* #jira-link {
 	text-decoration: none;
 	font-size: x-small;
 	font-family: var(--main-font);
 	padding-left: 0.5rem;
-}
+} */
 
 /* Configuration Section */
 #config-section {
