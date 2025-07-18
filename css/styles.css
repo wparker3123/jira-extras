@@ -512,3 +512,18 @@ details[open]::details-content {
 		background-color: #4b5563 !important;
 	}
 }
+
+.back-button {
+	border: 1px solid #999;
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	cursor: pointer;
+	font-size: x-large;
+	transition: all 0.3s ease-in-out;
+}
+
+.back-button:hover {
+	transform: scale(1.05);
+	background-color: #e2e8f0;
+	color: #1a202c;
+}

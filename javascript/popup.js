@@ -385,6 +385,9 @@ const keyboardNavigationHandler = event => {
     else if (event.key === 'ArrowRight') {
         goToNextTicket();
     }
+    // else if (event.key === 'Esc') {
+    //     debugger;
+    // }
 };
 
 const showForm = () => {
@@ -712,19 +715,26 @@ const goToPreviousTicket = () => {
         storyElems[currentIndex - 1].click();
     }
 }
-const prepareNavButtons = () => {
-    const navigationSection = document.querySelector('#ticket-details div.navigation-section');
+const prepareHeaderButtons = () => {
+    setTimeout(() => {
+        const backButton = document.querySelector('span.back-button');
+        backButton.onclick = () => hideForm();
 
-    const prevButton = document.createElement('button');
-    prevButton.textContent = '⬅️';
-    prevButton.onclick = goToPreviousTicket;
+        const prevButton = document.createElement('button');
+        prevButton.textContent = '⬅️';
+        prevButton.onclick = goToPreviousTicket;
 
-    const nextButton = document.createElement('button');
-    nextButton.textContent = '➡️';
-    nextButton.onclick = goToNextTicket;
+        const nextButton = document.createElement('button');
+        nextButton.textContent = '➡️';
+        nextButton.onclick = goToNextTicket;
 
-    navigationSection.appendChild(prevButton);
-    navigationSection.appendChild(nextButton);
+        const navigationSection = document.querySelector('div.navigation-section');
+        if (navigationSection) {
+            navigationSection.appendChild(prevButton);
+            navigationSection.appendChild(nextButton);
+        }
+    }, 2000);
+
 }
 
 const applySetting = (setting, userChoice) => {
@@ -874,7 +884,7 @@ const initializeExtension = async () => {
 const configureExtensionUI = () => {
     prepareSettingsUI();
     prepareMainSection();
-    prepareNavButtons();
+    prepareHeaderButtons();
 };
 
 document.addEventListener('DOMContentLoaded', () => {

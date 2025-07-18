@@ -1,6 +1,6 @@
 # Jira Extras Chrome Extension
 
-A Chrome extension that enhances your Jira experience with productivity features and quality-of-life improvements.
+A Chrome extension that enhances your Jira experience by providing quick view of stories and offering productivity & quality-of-life improvements.
 
 ![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-green)
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-blue)
