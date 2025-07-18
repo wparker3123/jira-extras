@@ -6,6 +6,9 @@ A Chrome extension that enhances your Jira experience by providing quick view of
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+|![](images/main-screen.png)<br>Main Screen|![](images/story-details.png)<br>Ticket Details|
+|:-:|:-:|
+
 ## 🌟 Features
 
 ### Core Functionality
